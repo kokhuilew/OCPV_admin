@@ -35,7 +35,7 @@ Quick Start Administrative Guide
     - [Actions after adding nodes](#actions-after-adding-nodes)
   - [How to controle VM migration when mantaining nodes](#how-to-controle-vm-migration-when-mantaining-nodes)
 - [Storage Management](#storage-management)
-  - [Storage trouble shooting](#storage trouble shooting)
+  - [Storage trouble shooting](#Storage-trouble-shooting)
 - [Network](#network)
   - [Verify network connectivity and measures latency between two VM attached to a secondary network interface.(Technical Preview feature)](#verify-network-connectivity-and-measures-latency-between-two-vm-attached-to-a-secondary-network-interfacetechnical-preview-feature)
     - [Prerequisites](#prerequisites)
@@ -309,7 +309,35 @@ How to monitor and resize the storage capactiy and performance
 ## Storage trouble shooting
 Use a predefined [storage checkup](https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html/virtualization/monitoring#virt-checking-storage-configuration_virt-running-cluster-checkups) to verify that the OpenShift Container Platform cluster storage is configured optimally to run OpenShift Virtualization workloads.
 
-Error messages from Primera3par CSP like 
+**HPE CSI Driver Diagnostics**
+
+Verify HPE Alletra StorageMP pods are running
+```
+$oc get pods –all-namespaces -l ‘app in (primera3par-csp, hpe-csi-node, hpe-csi-controller)’
+```
+
+Verify CRD named hpenodeinfos.storage.hpe.com holds important network and host initiator information
+```
+$oc get hpenodeinfos
+```
+
+Inspect a node
+```
+$oc get hpenodeinfos/<worker_node> -o yaml
+```
+
+Inspect CSI node driver
+```
+$oc logs -f daemonset.apps/hpe-csi-node hpe-csi-driver -n hpe-storage
+```
+
+Inspect CSI controller driver
+```
+$oc logs -f deployment.apps/hpe-csi-controller hpe-csi-driver -n hpe-storage
+```
+
+
+Example missing CSP error messages from Primera3par as shown 
 ```
 level=error msg="unable to connect to 192.168.X.X: dial tcp 192.168.X.X:22: connect: connection timed out\n" file="hpe_ssh.go:92"
 level=error msg="Non-CSP panic received: &hpessh.HpeSshErrorContext{RespBody:[]uint8(nil), ErrCode:1000, Err:(*errors.errorString)(0xc00023ac80)}\n" file="csp_manager.go:49"
