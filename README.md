@@ -47,35 +47,6 @@ Quick Start Administrative Guide
 - [Trouble shooting](#trouble-shooting)
 
 
-
-1. VM Management
-   - VM's Default CPU Model
-   - Physical CPU to Virtual Ratio For VM
-   - Dedicated resources for VM
-   - Descheduler evictions for VM (DRS for VMs)
-     
-2. Node Management
-   - Reserved Node Resources Automatically
-   - Reserved Node Resources Manually
-   - Node routing enabled
-   - Gracefully Reboot Node
-   - Gracefully Shut Down Node
-   - Delete Node
-   - Deleted Node Rejoin Cluster
-     
-3. Storage Management
-   - Default StorageClass
-   - ODF StorageSystem Degraded
-   - HPE CSI Driver Diagnostics
-   - HPE CSI Change Username/Password
-     
-4. Monitoring Management
-5. Backup and Restore Management
-6. Disaster Recovery Management
-7.  Support Management
-    - OCP-V lodge case preparation
-    - ODF lodge case preparation
-
 # About this document
 ## Disclaimer
 
