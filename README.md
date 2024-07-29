@@ -36,6 +36,8 @@ Quick Start Administrative Guide
   - [How to controle VM migration when mantaining nodes](#how-to-controle-vm-migration-when-mantaining-nodes)
 - [Storage Management](#storage-management)
   - [Storage trouble shooting](#Storage-trouble-shooting)
+    - [ODF StorageSystemDegraded](#ODF-StorageSystemDegraded)
+    - [HPE CSI Driver Diagnostics](#HPE-CSI-Driver-Diagnostics)
 - [Network](#network)
   - [Verify network connectivity and measures latency between two VM attached to a secondary network interface.(Technical Preview feature)](#verify-network-connectivity-and-measures-latency-between-two-vm-attached-to-a-secondary-network-interfacetechnical-preview-feature)
     - [Prerequisites](#prerequisites)
@@ -309,7 +311,53 @@ How to monitor and resize the storage capactiy and performance
 ## Storage trouble shooting
 Use a predefined [storage checkup](https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html/virtualization/monitoring#virt-checking-storage-configuration_virt-running-cluster-checkups) to verify that the OpenShift Container Platform cluster storage is configured optimally to run OpenShift Virtualization workloads.
 
-**HPE CSI Driver Diagnostics**
+To list available storageclass
+```
+$oc get storageclass
+```
+
+To make the desired storageclass the default
+```
+$oc patch storageclass ocs-storagecluster-ceph-rbd-virtualization -p ‘{“metadata”: {“annotations”: {“storageclass.kubernetes.io/is-default-class”: “true”}}}’
+```
+
+To remove the default storageclass setting from the old default storageclass
+```
+$oc patch storageclass hpe-standard -p ‘{“metadata”: {“annotations”: {“storageclass.kubernetes.io/is-default-class”: “false”}}}’
+```
+
+### ODF StorageSystemDegraded
+Due to node deleted scenario. The label of openshift-storage has been removed from deleted node. Re-label openshift-storage to the deleted node that have rebooted.
+```
+$oc label node <node_name> cluster.ocs.openshift.io/openshift-storage=’’
+```
+
+Run Ceph status and ceph osd tree to see that status of the Ceph cluster
+```
+$oc rsh -n openshift-storage $(oc get pods -n openshift-storage -o name -l app=rook-ceph-operator)
+sh-5.1$export CEPH_ARGS=’-c /var/lib/rook/openshift-storage/openshift-storage.config’
+sh-5.1$ceph status
+sh-5.1$ceph osd tree 
+```
+
+Read and acknowledge Ceph alert message
+1. Display list of message
+ ```
+ sh-5.1$ ceph crash ls
+ ```  
+2. Read the message
+  ```
+  sh-5.1$ ceph crash info <id>
+  ```
+3. Acknowledge the message
+  ```
+  sh-5.1$ ceph crash archive <id>
+  ```
+
+
+
+
+### HPE CSI Driver Diagnostics
 
 Verify HPE Alletra StorageMP pods are running
 ```
@@ -342,7 +390,7 @@ level=error msg="unable to connect to 192.168.X.X: dial tcp 192.168.X.X:22: conn
 level=error msg="Non-CSP panic received: &hpessh.HpeSshErrorContext{RespBody:[]uint8(nil), ErrCode:1000, Err:(*errors.errorString)(0xc00023ac80)}\n" file="csp_manager.go:49"
 ```
 
-### HPE Alletra MP StorageClass 
+#### HPE Alletra MP StorageClass 
 HPE Alletra MP StorageClass add **cpg parameter** as follows
 ```
   kind: StorageClass \n
