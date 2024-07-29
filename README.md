@@ -336,7 +336,6 @@ Inspect CSI controller driver
 $oc logs -f deployment.apps/hpe-csi-controller hpe-csi-driver -n hpe-storage
 ```
 
-
 Example missing CSP error messages from Primera3par as shown 
 ```
 level=error msg="unable to connect to 192.168.X.X: dial tcp 192.168.X.X:22: connect: connection timed out\n" file="hpe_ssh.go:92"
@@ -370,6 +369,43 @@ HPE Alletra MP StorageClass add **cpg parameter** as follows
   reclaimPolicy: Delete
   allowVolumeExpansion: true
   volumeBindingMode: Immediate
+```
+**HPE CSI Change Username or Password**
+
+Verify existing HPE CSI secret file
+```
+$oc get secret -n hpe-storage
+```
+
+Delete existing HPE CSI secret file
+```
+$oc delete secret/<hpe_backend> -n hpe-storage
+```
+
+Edit HPE CSI secret YAML file to reflect username or password changed
+```
+apiVersion: v1
+kind: secret
+metadata
+  name: hpe-backend
+  namespace: hpe-storage
+stringData: 
+  serviceName: alletrastoragemp-csp-svc
+  servicePort: “8080”
+  backend: <SAN_IP_address>
+  username: <username>
+  password: <password>
+```
+
+Create new HPE CSI secret
+```
+$oc create -f <hpe_csi_secret>
+```
+
+Restart HPE CSI objects to reflect the changes
+```
+$oc rollout ds restart -n hpe-storage
+$oc rollout deploy restart -n hpe-storage
 ```
 
 # Network
