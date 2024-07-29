@@ -35,7 +35,7 @@ Quick Start Administrative Guide
     - [Actions after adding nodes](#actions-after-adding-nodes)
   - [How to controle VM migration when mantaining nodes](#how-to-controle-vm-migration-when-mantaining-nodes)
 - [Storage Management](#storage-management)
-  - [Storage trouble shooting](#storage-trouble-shooting)
+  - [Storage trouble shooting](#storage trouble shooting)
 - [Network](#network)
   - [Verify network connectivity and measures latency between two VM attached to a secondary network interface.(Technical Preview feature)](#verify-network-connectivity-and-measures-latency-between-two-vm-attached-to-a-secondary-network-interfacetechnical-preview-feature)
     - [Prerequisites](#prerequisites)
@@ -308,6 +308,42 @@ How to monitor and resize the storage capactiy and performance
 
 ## Storage trouble shooting
 Use a predefined [storage checkup](https://access.redhat.com/documentation/en-us/openshift_container_platform/4.15/html/virtualization/monitoring#virt-checking-storage-configuration_virt-running-cluster-checkups) to verify that the OpenShift Container Platform cluster storage is configured optimally to run OpenShift Virtualization workloads.
+
+Error messages from Primera3par CSP like 
+```
+level=error msg="unable to connect to 192.168.X.X: dial tcp 192.168.X.X:22: connect: connection timed out\n" file="hpe_ssh.go:92"
+level=error msg="Non-CSP panic received: &hpessh.HpeSshErrorContext{RespBody:[]uint8(nil), ErrCode:1000, Err:(*errors.errorString)(0xc00023ac80)}\n" file="csp_manager.go:49"
+```
+
+### HPE Alletra MP StorageClass 
+HPE Alletra MP StorageClass add **cpg parameter** as follows
+```
+  kind: StorageClass \n
+  apiVersion: storage.k8s.io/v1
+  metadata:
+    name: hpe-standard
+  provisioner: csi.hpe.com
+  parameters:
+    csi.storage.k8s.io/fstype: xfs
+    csi.storage.k8s.io/provisioner-secret-namespace: hpe-storage
+    csi.storage.k8s.io/provisioner-secret-name: hpe-backend
+    csi.storage.k8s.io/node-stage-secret-name: hpe-backend
+    csi.storage.k8s.io/controller-expand-secret-name: hpe-backend
+    csi.storage.k8s.io/node-publish-secret-namespace: hpe-storage
+    csi.storage.k8s.io/controller-publish-secret-name: hpe-backend
+    csi.storage.k8s.io/controller-publish-secret-namespace: hpe-storage
+    hostSeesVLUN: 'true'
+    csi.storage.k8s.io/node-publish-secret-name: hpe-backend
+    csi.storage.k8s.io/controller-expand-secret-namespace: hpe-storage
+    cpg: RHOSP_CPG        <----- Change this to created storage pool name in SAN
+    accessProtocol: fc    <----- Change this value if other than FC connection
+    description: Volume created by the HPE CSI Driver for kubernetes
+    csi.storage.k8s.io/node-stage-secret-namespace: hpe-storage
+  reclaimPolicy: Delete
+  allowVolumeExpansion: true
+  volumeBindingMode: Immediate
+```
+
 # Network
 
 
