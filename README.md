@@ -37,6 +37,7 @@ Quick Start Administrative Guide
 - [Storage Management](#storage-management)
   - [Storage trouble shooting](#Storage-trouble-shooting)
     - [ODF StorageSystemDegraded](#ODF-StorageSystemDegraded)
+    - [ODF SlowOperations](#ODF-SlowOperations)
     - [HPE CSI Driver Diagnostics](#HPE-CSI-Driver-Diagnostics)
 - [Network](#network)
   - [Verify network connectivity and measures latency between two VM attached to a secondary network interface.(Technical Preview feature)](#verify-network-connectivity-and-measures-latency-between-two-vm-attached-to-a-secondary-network-interfacetechnical-preview-feature)
@@ -354,8 +355,27 @@ Read and acknowledge Ceph alert message
   sh-5.1$ ceph crash archive <id>
   ```
 
+### ODF SlowOperations
+Sometimes StorageSystem degraded due to slow operations on mon without errors or all OSDs are up as shown below
+```
+$ ceph -s
+cluster:
+  id:     ba41ac93-3b55-4f32-9e06-d3d8c6ff7334
+  health: HEALTH_WARN
+          30 slow ops, oldest one blocked for 10624 sec, mon.a has slow ops
+[...]
+```
 
+Ceph Mon.a is safely restarted to resolve StorageSystem dedgraded
+```
+oc scale --replicas=0 deploy/rook-ceph-mon-a
+oc scale --replicas=1 deploy/rook-ceph-mon-a
+```
 
+Verify Mon.a is restarted
+```
+oc get pods -l app=rook-ceph-mon-a
+```
 
 ### HPE CSI Driver Diagnostics
 
