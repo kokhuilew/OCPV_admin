@@ -5,6 +5,8 @@ Quick Start Administrative Guide
 
 
 # Table of Contents
+- [OpenShift Virtualization Day2 Administration](#openshift-virtualization-day2-administration)
+- [Table of Contents](#table-of-contents)
 - [About this document](#about-this-document)
   - [Disclaimer](#disclaimer)
   - [Purpose of this document](#purpose-of-this-document)
@@ -16,6 +18,7 @@ Quick Start Administrative Guide
     - [Querying metrics for all projects as a cluster administrator](#querying-metrics-for-all-projects-as-a-cluster-administrator)
   - [Alert and related runbook](#alert-and-related-runbook)
 - [VM Management](#vm-management)
+  - [Starting a VM](#starting-a-vm)
   - [VM creation](#vm-creation)
     - [Import VM from existing](#import-vm-from-existing)
     - [Create VM from template](#create-vm-from-template)
@@ -27,6 +30,7 @@ Quick Start Administrative Guide
         - [Storage snapshot data](#storage-snapshot-data)
         - [ I/O performance](#io-performance)
       - [Guest memory swapping metrics](#guest-memory-swapping-metrics)
+    - [Exposing custom metrics for virtual machines](#exposing-custom-metrics-for-virtual-machines)
   - [Delete/Destroy VM](#deletedestroy-vm)
 - [Node Manangement](#node-manangement)
   - [What metrics we should monitor](#what-metrics-we-should-monitor)
@@ -35,10 +39,11 @@ Quick Start Administrative Guide
     - [Actions after adding nodes](#actions-after-adding-nodes)
   - [How to controle VM migration when mantaining nodes](#how-to-controle-vm-migration-when-mantaining-nodes)
 - [Storage Management](#storage-management)
-  - [Storage trouble shooting](#Storage-trouble-shooting)
-    - [ODF StorageSystemDegraded](#ODF-StorageSystemDegraded)
-    - [ODF SlowOperations](#ODF-SlowOperations)
-    - [HPE CSI Driver Diagnostics](#HPE-CSI-Driver-Diagnostics)
+  - [Storage trouble shooting](#storage-trouble-shooting)
+    - [ODF StorageSystemDegraded](#odf-storagesystemdegraded)
+    - [ODF SlowOperations](#odf-slowoperations)
+    - [HPE CSI Driver Diagnostics](#hpe-csi-driver-diagnostics)
+      - [HPE Alletra MP StorageClass](#hpe-alletra-mp-storageclass)
 - [Network](#network)
   - [Verify network connectivity and measures latency between two VM attached to a secondary network interface.(Technical Preview feature)](#verify-network-connectivity-and-measures-latency-between-two-vm-attached-to-a-secondary-network-interfacetechnical-preview-feature)
     - [Prerequisites](#prerequisites)
@@ -47,6 +52,22 @@ Quick Start Administrative Guide
   - [Live migration](#live-migration)
     - [Live migration metrics](#live-migration-metrics)
 - [Openshift virtualization upgrade](#openshift-virtualization-upgrade)
+- [USB device passthrough](#usb-device-passthrough)
+  - [Redirectly local USB key to remote VM](#redirectly-local-usb-key-to-remote-vm)
+    - [1. Enable VM to support client passthrough feature](#1-enable-vm-to-support-client-passthrough-feature)
+    - [2. Start VM](#2-start-vm)
+    - [3. Login remote VM consle and check USB devices](#3-login-remote-vm-consle-and-check-usb-devices)
+    - [4. Plug the USB ken in local host and check the USB device ID](#4-plug-the-usb-ken-in-local-host-and-check-the-usb-device-id)
+    - [5. passthough the USB key](#5-passthough-the-usb-key)
+    - [6.  you could see the message show in vm console](#6--you-could-see-the-message-show-in-vm-console)
+  - [Redirectly local USB Disk to remote VM](#redirectly-local-usb-disk-to-remote-vm)
+    - [1. Enable VM to support client passthrough feature](#1-enable-vm-to-support-client-passthrough-feature-1)
+    - [2. Start VM](#2-start-vm-1)
+    - [3. Login remote VM consle and check USB devices](#3-login-remote-vm-consle-and-check-usb-devices-1)
+    - [4. Plug the USB disk in local host and check the USB device ID](#4-plug-the-usb-disk-in-local-host-and-check-the-usb-device-id)
+    - [5. passthough the USB disk](#5-passthough-the-usb-disk)
+    - [6. check the message from your vm console](#6-check-the-message-from-your-vm-console)
+    - [7. mount USB disk in VM console](#7-mount-usb-disk-in-vm-console)
 - [Trouble shooting](#trouble-shooting)
 
 
@@ -755,6 +776,127 @@ The number of failed migrations. Type: Gauge.
 
 
 # Openshift virtualization upgrade
+# USB device passthrough 
+[**KubeVirt Client Passthrough**](https://kubevirt.io/user-guide/compute/client_passthrough/)
+
+KubeVirt included support for redirecting devices from the client's machine to the VMI with the support of virtctl command. The virtctl command uses an application called [usbredirect](https://gitlab.freedesktop.org/spice/usbredir/) to handle client's USB device by unplugging the device from the Client OS and channeling the communication between the device and the VMI.
+
+The usbredirect binary comes from the [usbredir](https://gitlab.freedesktop.org/spice/usbredir/) project and is supported by most Linux distros. You can either fetch the [latest release](https://www.spice-space.org/download/usbredir/) or [MSI installer](https://www.spice-space.org/download/windows/usbredirect/) for Windows support.
+
+Download and install teh usbdirect before run `virtctl usbredir` .
+## Redirectly local USB key to remote VM
+Some application need USB key to authenticate the user or license. If the application is running in VM, the user access or start the application from remote client, the end user should plug the UBS Key in the local client, then redrect the USB Key to remote VM and let the application access the USB Key as it plugged in the VM.
+![USB key passthrough](images/USBKey-passthrough.png)
+### 1. Enable VM to support client passthrough feature
+Support for redirection of client's USB device was introduced in release v0.44. This feature is not enabled by default. To enable it, add an empty clientPassthrough under devices.
+```yaml
+spec:
+  domain:
+    devices:
+      clientPassthrough: {}
+```
+Sample:
+```powershell
+oc patch vm/rhel-8-03 --type=merge -p '{"spec":{"template":{"spec":{"domain":{"devices":{"clientPassthrough": {}}}}}}}'
+```
+### 2. Start VM
+```shell
+$ virtctl restart rhel-8-03
+$ oc get vm rhel-8-03 
+NAME        AGE   STATUS    READY
+rhel-8-03   41d   Running   True
+```
+
+### 3. Login remote VM consle and check USB devices
+```shell
+$ virtctl console rhel-8-03
+```
+Run 'sudo ls /sys/bus/usb/devices -l" in the remote console to check VM's USB devices.
+### 4. Plug the USB ken in local host and check the USB device ID
+![lsusb](images/lsusbkey.png)
+
+### 5. passthough the USB key
+```shell
+$ sudo virtctl usbredir 1780:0491 rhel-8-03 
+Password:
+{"component":"","level":"info","msg":"port_arg: 'localhost:62945'","pos":"usbredir.go:158","timestamp":"2024-06-20T07:06:52.940778Z"}
+{"component":"","level":"info","msg":"args: '[--device 1780:0491 --to localhost:62945]'","pos":"usbredir.go:159","timestamp":"2024-06-20T07:06:52.940878Z"}
+{"component":"","level":"info","msg":"Executing commandline: 'usbredirect [--device 1780:0491 --to localhost:62945]'","pos":"usbredir.go:160","timestamp":"2024-06-20T07:06:52.940889Z"}
+{"component":"","level":"info","msg":"Connected to usbredirect at 432.849704ms","pos":"usbredir.go:127","timestamp":"2024-06-20T07:06:53.373639Z"}
+```
+### 6.  you could see the message show in vm console
+![images/usbkeymsg.png](images/usbkeymsg.png)
+
+## Redirectly local USB Disk to remote VM
+You could leverage usbdirect to attage your USB disk to your remote VM.
+![images/USBDisk-passthough.png](images/USBDisk-passthough.png)
+### 1. Enable VM to support client passthrough feature
+Support for redirection of client's USB device was introduced in release v0.44. This feature is not enabled by default. To enable it, add an empty clientPassthrough under devices.
+```yaml
+spec:
+  domain:
+    devices:
+      clientPassthrough: {}
+```
+Sample:
+```powershell
+oc patch vm/rhel-8-03 --type=merge -p '{"spec":{"template":{"spec":{"domain":{"devices":{"clientPassthrough": {}}}}}}}'
+```
+### 2. Start VM
+```shell
+$ virtctl restart rhel-8-03
+$ oc get vm rhel-8-03 
+NAME        AGE   STATUS    READY
+rhel-8-03   41d   Running   True
+```
+
+### 3. Login remote VM consle and check USB devices
+```shell
+$ virtctl console rhel-8-03
+```
+Run 'sudo ls /sys/bus/usb/devices -l" in the remote console to check VM's USB devices.
+### 4. Plug the USB disk in local host and check the USB device ID
+![lsusb](images/lsusbdisk.png)
+### 5. passthough the USB disk
+```shell
+# virtctl usbredir 1f75:0916 rhel-8-03 
+{"component":"","level":"info","msg":"port_arg: 'localhost:44773'","pos":"usbredir.go:159","timestamp":"2024-07-16T03:08:51.655094Z"}
+{"component":"","level":"info","msg":"args: '[--device 1f75:0916 --to localhost:44773]'","pos":"usbredir.go:160","timestamp":"2024-07-16T03:08:51.656920Z"}
+{"component":"","level":"info","msg":"Executing commandline: 'usbredirect [--device 1f75:0916 --to localhost:44773]'","pos":"usbredir.go:161","timestamp":"2024-07-16T03:08:51.657017Z"}
+{"component":"","level":"info","msg":"Connected to usbredirect at 457.228379ms","pos":"usbredir.go:128","timestamp":"2024-07-16T03:08:52.112318Z"}
+```
+### 6. check the message from your vm console
+```
+[  166.232420] usb 2-1: new SuperSpeed USB device number 2 using xhci_hcd
+[  168.707478] usb 2-1: New USB device found, idVendor=1f75, idProduct=0916, bcdDevice= 0.0b
+[  168.708525] usb 2-1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+[  168.709364] usb 2-1: Product: F30
+[  168.709758] usb 2-1: Manufacturer: EAGET
+[  168.710261] usb 2-1: SerialNumber: 00000000000000283
+[  168.950520] usb-storage 2-1:1.0: USB Mass Storage device detected
+[  168.952252] scsi host7: usb-storage 2-1:1.0
+[  168.952863] usbcore: registered new interface driver usb-storage
+[  168.958059] usbcore: registered new interface driver uas
+[  171.607771] scsi 7:0:0:0: Direct-Access     EAGET    F30              1.00 PQ: 0 ANSI: 6
+[  171.609425] sd 7:0:0:0: Attached scsi generic sg1 type 0
+[  172.728097] sd 7:0:0:0: [sdb] 30310400 512-byte logical blocks: (15.5 GB/14.5 GiB)
+[  173.400857] sd 7:0:0:0: [sdb] Write Protect is off
+[  173.401407] sd 7:0:0:0: [sdb] Mode Sense: 23 00 00 00
+[  174.074716] sd 7:0:0:0: [sdb] Write cache: disabled, read cache: disabled, doesn't support DPO or FUA
+[  178.815088]  sdb: sdb1 sdb2
+[  182.621070] sd 7:0:0:0: [sdb] Attached SCSI removable disk
+[cloud-user@rhel-8-03 ~]$ 
+```
+### 7. mount USB disk in VM console
+```shell
+[root@rhel-8-03 ~]# mount -t iso9660 /dev/sdb1 /mnt
+mount: /mnt: WARNING: device write-protected, mounted read-only.
+[root@rhel-8-03 ~]# ls /mnt
+AppStream  EULA              images      RPM-GPG-KEY-redhat-beta
+BaseOS     extra_files.json  isolinux    RPM-GPG-KEY-redhat-release
+EFI        GPL               media.repo
+```
+
 
 # Trouble shooting
 How to collection related information to analyze the root cause 
