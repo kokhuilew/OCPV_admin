@@ -1,15 +1,13 @@
 # OpenShift Virtualization Day2 Administration
 Quick Start Administrative Guide
 
-
-
-
 # Table of Contents
 - [OpenShift Virtualization Day2 Administration](#openshift-virtualization-day2-administration)
 - [Table of Contents](#table-of-contents)
 - [About this document](#about-this-document)
   - [Disclaimer](#disclaimer)
   - [Purpose of this document](#purpose-of-this-document)
+- [Learning OpenShift Virtualization concepts as a vSphere admin](#learning-openshift-virtualization-concepts-as-a-vsphere-admin)
 - [Day 2 operation content](#day-2-operation-content)
 - [Basic concept and definition of Openshift virtualization](#basic-concept-and-definition-of-openshift-virtualization)
 - [OpenShift Virtualization Deployment Architecture](#openshift-virtualization-deployment-architecture)
@@ -68,7 +66,7 @@ Quick Start Administrative Guide
     - [5. passthough the USB disk](#5-passthough-the-usb-disk)
     - [6. check the message from your vm console](#6-check-the-message-from-your-vm-console)
     - [7. mount USB disk in VM console](#7-mount-usb-disk-in-vm-console)
-- [Trouble shooting](#trouble-shooting)
+- [Tuning and scaling](#tuning-and-scaling)
 
 
 # About this document
@@ -83,6 +81,12 @@ Quick Start Administrative Guide
 This document serves as a comprehensive guide for IT administrators on the Day 2 operations of OpenShift virtualization. It aims to provide detailed insights, instructions, and best practices for managing OpenShift virtualized environments post-deployment.
 
 The primary purpose of this document is to empower IT administrators with the knowledge and tools necessary to effectively operate and maintain OpenShift virtualization infrastructure. By understanding the Day 2 operations, administrators can ensure the smooth functioning, performance optimization, and scalability of their OpenShift virtualized environments.
+
+# Learning OpenShift Virtualization concepts as a vSphere admin
+This section helps when transitioning your organization's infrastructure from VMware vSphere to modernized platform. We will be exploring high level concepts such as network configurations, storage paradigms, and disaster recovery, as they exist in OpenShift Virtualization and how to navigate them coming from working within VMware vSphere.
+
+Visit https://cloud.redhat.com/learn/learning-openshift-virtualization-concepts-vsphere-admin
+
 # Day 2 operation content
 Comparing day 0 planning, day 1 deploying, yes, day-2 is the stuff that happens after deployment. The fun stuff is over. Celebrations over a 'successful delivery' are behind you. It's time to embrace reality for a while, at least until you start all over again.
 
