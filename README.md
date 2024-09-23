@@ -902,16 +902,12 @@ EFI        GPL               media.repo
 ```
 
 
-# Trouble shooting
-How to collection related information to analyze the root cause 
+# Tuning and Scaling
+OpenShift Virtualization included feature in OpenShift Container Platform defaults are designed to work well out of the box. For example, the virtual machine templates by default include a high performance workload type. This section is supplemental tuning guide to help you on fine tuning cluster scalability and VM performance for several use cases and environments for a variety of workloads and cluster sizes. 
+
+Visit https://cloud.redhat.com/learning/learn:how-create-and-scale-6000-virtual-machines-7-hours-red-hat-openshift-virtualization/resource/resources:hour-1-network-tuning-red-hat-ceph-storage
+
+Visit https://access.redhat.com/articles/6994974
 
 
 
----
-<style>
-todo{
-font-size:30px;
-color:red;
-text-intent:10px;
-}
-</style>
